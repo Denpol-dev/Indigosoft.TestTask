@@ -1,0 +1,48 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36623.8
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Indigosoft.TestTask.Aggregator", "Indigosoft.TestTask.Aggregator\Indigosoft.TestTask.Aggregator.csproj", "{EB1E4C61-96FB-4848-9639-70D818930772}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Indigosoft.TestTask.ExchangeSimulator", "Indigosoft.TestTask.ExchangeSimulator\Indigosoft.TestTask.ExchangeSimulator.csproj", "{E22F779A-C950-45CD-A6B6-12E1AC4FC80C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Indigosoft.TestTask.Core", "Indigosoft.TestTask.Core\Indigosoft.TestTask.Core.csproj", "{8A607CBB-3A7D-461D-9382-B0BC5B0BAFAD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Indigosoft.TestTask.Database", "Indigosoft.TestTask.Database\Indigosoft.TestTask.Database.csproj", "{9876C58A-B8A6-4A23-A1DB-61556030B525}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Indigosoft.TestTask.Aggregator.Tests", "Indigosoft.TestTask.Aggregator.Tests\Indigosoft.TestTask.Aggregator.Tests.csproj", "{DA13AE35-8635-4ECB-93E9-00646156AD5F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EB1E4C61-96FB-4848-9639-70D818930772}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB1E4C61-96FB-4848-9639-70D818930772}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB1E4C61-96FB-4848-9639-70D818930772}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB1E4C61-96FB-4848-9639-70D818930772}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E22F779A-C950-45CD-A6B6-12E1AC4FC80C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E22F779A-C950-45CD-A6B6-12E1AC4FC80C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E22F779A-C950-45CD-A6B6-12E1AC4FC80C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E22F779A-C950-45CD-A6B6-12E1AC4FC80C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A607CBB-3A7D-461D-9382-B0BC5B0BAFAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A607CBB-3A7D-461D-9382-B0BC5B0BAFAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A607CBB-3A7D-461D-9382-B0BC5B0BAFAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A607CBB-3A7D-461D-9382-B0BC5B0BAFAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9876C58A-B8A6-4A23-A1DB-61556030B525}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9876C58A-B8A6-4A23-A1DB-61556030B525}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9876C58A-B8A6-4A23-A1DB-61556030B525}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9876C58A-B8A6-4A23-A1DB-61556030B525}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA13AE35-8635-4ECB-93E9-00646156AD5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA13AE35-8635-4ECB-93E9-00646156AD5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA13AE35-8635-4ECB-93E9-00646156AD5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA13AE35-8635-4ECB-93E9-00646156AD5F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1C3CB11C-7482-4403-8FB9-50F35E3AAB7E}
+	EndGlobalSection
+EndGlobal

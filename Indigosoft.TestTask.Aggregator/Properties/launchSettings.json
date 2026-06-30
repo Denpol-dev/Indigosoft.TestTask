@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Indigosoft.TestTask.Aggregator": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:64235;http://localhost:64236"
+    }
+  }
+}
