@@ -2,6 +2,7 @@ using Indigosoft.TestTask.Aggregator.Channels;
 using Indigosoft.TestTask.Aggregator.Deduplication;
 using Indigosoft.TestTask.Aggregator.Parsing;
 using Indigosoft.TestTask.Aggregator.WebSockets;
+using Indigosoft.TestTask.Aggregator.Workers;
 using Indigosoft.TestTask.Core.Interfaces;
 using Indigosoft.TestTask.Core.Options;
 
@@ -21,6 +22,8 @@ builder.Services.AddSingleton<IExchangeMessageParser, ExchangeCMessageParser>();
 builder.Services.AddSingleton<ExchangeMessageParserResolver>();
 builder.Services.AddSingleton<ITickDeduplicator, InMemoryTickDeduplicator>();
 builder.Services.AddSingleton<TickChannel>();
+builder.Services.AddSingleton<IReconnectDelay, SystemReconnectDelay>();
+builder.Services.AddSingleton<ExchangeConnectionWorker>();
 
 var app = builder.Build();
 
