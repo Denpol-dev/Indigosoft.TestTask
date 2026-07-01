@@ -1,12 +1,18 @@
+using Indigosoft.TestTask.Aggregator.Deduplication;
 using Indigosoft.TestTask.Aggregator.Parsing;
 using Indigosoft.TestTask.Core.Interfaces;
+using Indigosoft.TestTask.Core.Options;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<DeduplicationOptions>(
+    builder.Configuration.GetSection("Aggregator:Deduplication"));
 
 builder.Services.AddSingleton<IExchangeMessageParser, ExchangeAMessageParser>();
 builder.Services.AddSingleton<IExchangeMessageParser, ExchangeBMessageParser>();
 builder.Services.AddSingleton<IExchangeMessageParser, ExchangeCMessageParser>();
 builder.Services.AddSingleton<ExchangeMessageParserResolver>();
+builder.Services.AddSingleton<ITickDeduplicator, InMemoryTickDeduplicator>();
 
 var app = builder.Build();
 
