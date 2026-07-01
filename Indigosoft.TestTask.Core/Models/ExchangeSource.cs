@@ -13,8 +13,8 @@ public static class ExchangeSource
         ExchangeC
     };
 
-    public static bool IsKnown(string source)
+    public static bool IsKnown(string? source)
     {
-        return All.Contains(source);
+        return !string.IsNullOrWhiteSpace(source) && All.Contains(source);
     }
 }
