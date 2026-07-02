@@ -1,6 +1,7 @@
 using Indigosoft.TestTask.Aggregator.Channels;
 using Indigosoft.TestTask.Aggregator.Deduplication;
 using Indigosoft.TestTask.Aggregator.HostedServices;
+using Indigosoft.TestTask.Aggregator.Metrics;
 using Indigosoft.TestTask.Aggregator.Parsing;
 using Indigosoft.TestTask.Aggregator.WebSockets;
 using Indigosoft.TestTask.Aggregator.Workers;
@@ -29,6 +30,7 @@ builder.Services.AddSingleton<ITickDeduplicator, InMemoryTickDeduplicator>();
 builder.Services.AddSingleton<TickChannel>();
 builder.Services.AddSingleton<IReconnectDelay, SystemReconnectDelay>();
 builder.Services.AddSingleton<IBatchWriterDelay, SystemBatchWriterDelay>();
+builder.Services.AddSingleton<TickIngestionStatistics>();
 builder.Services.AddSingleton<TickWriteStatistics>();
 builder.Services.AddSingleton<IExchangeConnectionWorker, ExchangeConnectionWorker>();
 builder.Services.AddHostedService<DatabaseInitializationHostedService>();
@@ -38,5 +40,24 @@ builder.Services.AddHostedService<ExchangeConnectionHostedService>();
 var app = builder.Build();
 
 app.MapGet("/health", () => "Aggregator is running");
+
+app.MapGet("/metrics", (
+    TickIngestionStatistics ingestionStatistics,
+    TickWriteStatistics writeStatistics,
+    TickChannel tickChannel) =>
+{
+    return Results.Ok(new AggregatorMetricsResponse(
+        ingestionStatistics.ReceivedMessages,
+        ingestionStatistics.ParsedMessages,
+        ingestionStatistics.ParseFailures,
+        ingestionStatistics.DuplicateTicks,
+        ingestionStatistics.EnqueuedTicks,
+        writeStatistics.WrittenTicks,
+        writeStatistics.DroppedTicks,
+        writeStatistics.FailedBatches,
+        tickChannel.Count,
+        tickChannel.Capacity,
+        tickChannel.FillRatio));
+});
 
 app.Run();

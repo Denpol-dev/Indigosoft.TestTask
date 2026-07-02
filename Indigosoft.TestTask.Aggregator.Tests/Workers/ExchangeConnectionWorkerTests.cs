@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using Indigosoft.TestTask.Aggregator.Channels;
 using Indigosoft.TestTask.Aggregator.Deduplication;
+using Indigosoft.TestTask.Aggregator.Metrics;
 using Indigosoft.TestTask.Aggregator.Parsing;
 using Indigosoft.TestTask.Aggregator.WebSockets;
 using Indigosoft.TestTask.Aggregator.Workers;
@@ -31,7 +32,7 @@ public sealed class ExchangeConnectionWorkerTests
     {
         var stream = new FakeExchangeMessageStream();
         stream.EnqueueMessages(waitForCancellationAfterMessages: true, ValidExchangeAJson);
-        var worker = CreateWorker(stream, out var tickChannel);
+        var worker = CreateWorker(stream, out var tickChannel, out var statistics);
         using var cancellation = new CancellationTokenSource();
 
         var workerTask = worker.RunAsync(CreateConnection(), cancellation.Token);
@@ -40,6 +41,11 @@ public sealed class ExchangeConnectionWorkerTests
         Assert.Equal(ExchangeSource.ExchangeA, tick.Source);
         Assert.Equal("BTCUSDT", tick.Ticker);
         Assert.Equal(65000.12m, tick.Price);
+        Assert.Equal(1, statistics.ReceivedMessages);
+        Assert.Equal(1, statistics.ParsedMessages);
+        Assert.Equal(0, statistics.ParseFailures);
+        Assert.Equal(0, statistics.DuplicateTicks);
+        Assert.Equal(1, statistics.EnqueuedTicks);
 
         await StopWorkerAsync(workerTask, cancellation);
     }
@@ -49,13 +55,18 @@ public sealed class ExchangeConnectionWorkerTests
     {
         var stream = new FakeExchangeMessageStream();
         stream.EnqueueMessages(waitForCancellationAfterMessages: true, "{ invalid json");
-        var worker = CreateWorker(stream, out var tickChannel);
+        var worker = CreateWorker(stream, out var tickChannel, out var statistics);
         using var cancellation = new CancellationTokenSource();
 
         var workerTask = worker.RunAsync(CreateConnection(), cancellation.Token);
         await stream.WaitForCompletedAttemptsAsync(1).WaitAsync(TimeSpan.FromSeconds(2));
 
         Assert.Equal(0, tickChannel.Count);
+        Assert.Equal(1, statistics.ReceivedMessages);
+        Assert.Equal(0, statistics.ParsedMessages);
+        Assert.Equal(1, statistics.ParseFailures);
+        Assert.Equal(0, statistics.DuplicateTicks);
+        Assert.Equal(0, statistics.EnqueuedTicks);
 
         await StopWorkerAsync(workerTask, cancellation);
     }
@@ -65,7 +76,7 @@ public sealed class ExchangeConnectionWorkerTests
     {
         var stream = new FakeExchangeMessageStream();
         stream.EnqueueMessages(waitForCancellationAfterMessages: true, ValidExchangeAJson, ValidExchangeAJson);
-        var worker = CreateWorker(stream, out var tickChannel);
+        var worker = CreateWorker(stream, out var tickChannel, out var statistics);
         using var cancellation = new CancellationTokenSource();
 
         var workerTask = worker.RunAsync(CreateConnection(), cancellation.Token);
@@ -75,6 +86,11 @@ public sealed class ExchangeConnectionWorkerTests
         var tick = await tickChannel.ReadAsync(cancellation.Token).AsTask().WaitAsync(TimeSpan.FromSeconds(2));
         Assert.Equal("BTCUSDT", tick.Ticker);
         Assert.Equal(0, tickChannel.Count);
+        Assert.Equal(2, statistics.ReceivedMessages);
+        Assert.Equal(2, statistics.ParsedMessages);
+        Assert.Equal(0, statistics.ParseFailures);
+        Assert.Equal(1, statistics.DuplicateTicks);
+        Assert.Equal(1, statistics.EnqueuedTicks);
 
         await StopWorkerAsync(workerTask, cancellation);
     }
@@ -136,13 +152,30 @@ public sealed class ExchangeConnectionWorkerTests
         FakeExchangeMessageStream stream,
         out TickChannel tickChannel)
     {
-        return CreateWorker(stream, new RecordingReconnectDelay(), out tickChannel);
+        return CreateWorker(stream, new RecordingReconnectDelay(), out tickChannel, out _);
+    }
+
+    private static ExchangeConnectionWorker CreateWorker(
+        FakeExchangeMessageStream stream,
+        out TickChannel tickChannel,
+        out TickIngestionStatistics statistics)
+    {
+        return CreateWorker(stream, new RecordingReconnectDelay(), out tickChannel, out statistics);
     }
 
     private static ExchangeConnectionWorker CreateWorker(
         FakeExchangeMessageStream stream,
         RecordingReconnectDelay reconnectDelay,
         out TickChannel tickChannel)
+    {
+        return CreateWorker(stream, reconnectDelay, out tickChannel, out _);
+    }
+
+    private static ExchangeConnectionWorker CreateWorker(
+        FakeExchangeMessageStream stream,
+        RecordingReconnectDelay reconnectDelay,
+        out TickChannel tickChannel,
+        out TickIngestionStatistics statistics)
     {
         var parserResolver = new ExchangeMessageParserResolver(
         [
@@ -153,6 +186,7 @@ public sealed class ExchangeConnectionWorkerTests
 
         var deduplicator = new InMemoryTickDeduplicator(Options.Create(new DeduplicationOptions()));
         tickChannel = new TickChannel(Options.Create(new TickChannelOptions { Capacity = 10 }));
+        statistics = new TickIngestionStatistics();
 
         return new ExchangeConnectionWorker(
             stream,
@@ -160,6 +194,7 @@ public sealed class ExchangeConnectionWorkerTests
             deduplicator,
             tickChannel,
             reconnectDelay,
+            statistics,
             NullLogger<ExchangeConnectionWorker>.Instance);
     }
 

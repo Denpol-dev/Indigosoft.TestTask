@@ -1,5 +1,6 @@
 using System.Net.WebSockets;
 using Indigosoft.TestTask.Aggregator.Channels;
+using Indigosoft.TestTask.Aggregator.Metrics;
 using Indigosoft.TestTask.Aggregator.Parsing;
 using Indigosoft.TestTask.Aggregator.WebSockets;
 using Indigosoft.TestTask.Core.Interfaces;
@@ -17,6 +18,7 @@ public sealed class ExchangeConnectionWorker : IExchangeConnectionWorker
     private readonly ITickDeduplicator _deduplicator;
     private readonly TickChannel _tickChannel;
     private readonly IReconnectDelay _reconnectDelay;
+    private readonly TickIngestionStatistics _statistics;
     private readonly ILogger<ExchangeConnectionWorker> _logger;
 
     public ExchangeConnectionWorker(
@@ -25,6 +27,7 @@ public sealed class ExchangeConnectionWorker : IExchangeConnectionWorker
         ITickDeduplicator deduplicator,
         TickChannel tickChannel,
         IReconnectDelay reconnectDelay,
+        TickIngestionStatistics statistics,
         ILogger<ExchangeConnectionWorker> logger)
     {
         ArgumentNullException.ThrowIfNull(messageStream);
@@ -32,6 +35,7 @@ public sealed class ExchangeConnectionWorker : IExchangeConnectionWorker
         ArgumentNullException.ThrowIfNull(deduplicator);
         ArgumentNullException.ThrowIfNull(tickChannel);
         ArgumentNullException.ThrowIfNull(reconnectDelay);
+        ArgumentNullException.ThrowIfNull(statistics);
         ArgumentNullException.ThrowIfNull(logger);
 
         _messageStream = messageStream;
@@ -39,6 +43,7 @@ public sealed class ExchangeConnectionWorker : IExchangeConnectionWorker
         _deduplicator = deduplicator;
         _tickChannel = tickChannel;
         _reconnectDelay = reconnectDelay;
+        _statistics = statistics;
         _logger = logger;
     }
 
@@ -62,18 +67,23 @@ public sealed class ExchangeConnectionWorker : IExchangeConnectionWorker
 
                 await foreach (var rawMessage in _messageStream.ReadMessagesAsync(connection, cancellationToken))
                 {
+                    _statistics.IncrementReceivedMessages();
                     currentReconnectDelay = initialReconnectDelay;
 
                     if (!_parserResolver.TryParse(connection.Source, rawMessage, out var tick) || tick is null)
                     {
+                        _statistics.IncrementParseFailures();
                         _logger.LogWarning(
                             "Failed to parse message from {ExchangeSource}",
                             connection.Source);
                         continue;
                     }
 
+                    _statistics.IncrementParsedMessages();
+
                     if (!_deduplicator.TryMarkAsProcessed(tick))
                     {
+                        _statistics.IncrementDuplicateTicks();
                         _logger.LogDebug(
                             "Duplicate tick skipped for {ExchangeSource} {Ticker}",
                             tick.Source,
@@ -82,6 +92,7 @@ public sealed class ExchangeConnectionWorker : IExchangeConnectionWorker
                     }
 
                     await _tickChannel.EnqueueAsync(tick, cancellationToken);
+                    _statistics.IncrementEnqueuedTicks();
 
                     _logger.LogDebug(
                         "Tick enqueued for {ExchangeSource} {Ticker}",
