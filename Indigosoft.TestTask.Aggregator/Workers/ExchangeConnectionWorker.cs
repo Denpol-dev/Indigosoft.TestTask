@@ -7,7 +7,7 @@ using Indigosoft.TestTask.Core.Options;
 
 namespace Indigosoft.TestTask.Aggregator.Workers;
 
-public sealed class ExchangeConnectionWorker
+public sealed class ExchangeConnectionWorker : IExchangeConnectionWorker
 {
     private const int DefaultInitialReconnectDelayMs = 1_000;
     private const int DefaultMaxReconnectDelayMs = 30_000;
@@ -27,6 +27,13 @@ public sealed class ExchangeConnectionWorker
         IReconnectDelay reconnectDelay,
         ILogger<ExchangeConnectionWorker> logger)
     {
+        ArgumentNullException.ThrowIfNull(messageStream);
+        ArgumentNullException.ThrowIfNull(parserResolver);
+        ArgumentNullException.ThrowIfNull(deduplicator);
+        ArgumentNullException.ThrowIfNull(tickChannel);
+        ArgumentNullException.ThrowIfNull(reconnectDelay);
+        ArgumentNullException.ThrowIfNull(logger);
+
         _messageStream = messageStream;
         _parserResolver = parserResolver;
         _deduplicator = deduplicator;

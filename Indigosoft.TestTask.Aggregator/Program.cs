@@ -23,7 +23,8 @@ builder.Services.AddSingleton<ExchangeMessageParserResolver>();
 builder.Services.AddSingleton<ITickDeduplicator, InMemoryTickDeduplicator>();
 builder.Services.AddSingleton<TickChannel>();
 builder.Services.AddSingleton<IReconnectDelay, SystemReconnectDelay>();
-builder.Services.AddSingleton<ExchangeConnectionWorker>();
+builder.Services.AddSingleton<IExchangeConnectionWorker, ExchangeConnectionWorker>();
+builder.Services.AddHostedService<ExchangeConnectionHostedService>();
 
 var app = builder.Build();
 
