@@ -1,0 +1,78 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: indigosoft-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - indigosoft-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  exchange-simulator:
+    build:
+      context: .
+      dockerfile: Indigosoft.TestTask.ExchangeSimulator/Dockerfile
+    container_name: indigosoft-exchange-simulator
+    ports:
+      - "5100:5100"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5100
+
+  aggregator:
+    build:
+      context: .
+      dockerfile: Indigosoft.TestTask.Aggregator/Dockerfile
+    container_name: indigosoft-aggregator
+    ports:
+      - "5200:5200"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5200
+
+      Postgres__ConnectionString: Host=postgres;Port=5432;Database=indigosoft_ticks;Username=postgres;Password=postgres
+      Postgres__MaintenanceDatabase: postgres
+
+      Aggregator__Exchanges__0__Source: ExchangeA
+      Aggregator__Exchanges__0__WebSocketUrl: ws://exchange-simulator:5100/ws/exchange-a
+      Aggregator__Exchanges__0__InitialReconnectDelayMs: 1000
+      Aggregator__Exchanges__0__MaxReconnectDelayMs: 30000
+      Aggregator__Exchanges__0__IdleTimeoutSeconds: 10
+
+      Aggregator__Exchanges__1__Source: ExchangeB
+      Aggregator__Exchanges__1__WebSocketUrl: ws://exchange-simulator:5100/ws/exchange-b
+      Aggregator__Exchanges__1__InitialReconnectDelayMs: 1000
+      Aggregator__Exchanges__1__MaxReconnectDelayMs: 30000
+      Aggregator__Exchanges__1__IdleTimeoutSeconds: 10
+
+      Aggregator__Exchanges__2__Source: ExchangeC
+      Aggregator__Exchanges__2__WebSocketUrl: ws://exchange-simulator:5100/ws/exchange-c
+      Aggregator__Exchanges__2__InitialReconnectDelayMs: 1000
+      Aggregator__Exchanges__2__MaxReconnectDelayMs: 30000
+      Aggregator__Exchanges__2__IdleTimeoutSeconds: 10
+
+      Aggregator__Channel__Capacity: 100000
+      Aggregator__Deduplication__WindowSeconds: 60
+      Aggregator__Deduplication__CleanupIntervalSeconds: 10
+      Aggregator__BatchWriter__BatchSize: 500
+      Aggregator__BatchWriter__FlushIntervalMs: 1000
+      Aggregator__BatchWriter__MaxWriteRetries: 3
+      Aggregator__BatchWriter__InitialRetryDelayMs: 500
+      Aggregator__BatchWriter__MaxRetryDelayMs: 5000
+      Aggregator__BatchWriter__DrainTimeoutSeconds: 15
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      exchange-simulator:
+        condition: service_started
+
+volumes:
+  indigosoft-postgres-data:
