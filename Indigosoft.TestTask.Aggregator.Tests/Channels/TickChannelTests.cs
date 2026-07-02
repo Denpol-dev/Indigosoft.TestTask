@@ -32,6 +32,20 @@ public sealed class TickChannelTests
     }
 
     [Fact]
+    public async Task TryRead_AfterEnqueue_ReturnsSameTickAndDecreasesCount()
+    {
+        var channel = CreateChannel();
+        var tick = CreateTick();
+
+        await channel.EnqueueAsync(tick, CancellationToken.None);
+        var result = channel.TryRead(out var readTick);
+
+        Assert.True(result);
+        Assert.Same(tick, readTick);
+        Assert.Equal(0, channel.Count);
+    }
+
+    [Fact]
     public async Task FillRatio_ReturnsExpectedValue()
     {
         var channel = CreateChannel(capacity: 2);

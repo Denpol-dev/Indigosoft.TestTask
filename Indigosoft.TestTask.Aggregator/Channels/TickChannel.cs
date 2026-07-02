@@ -73,6 +73,23 @@ public sealed class TickChannel
         return tick;
     }
 
+    public ValueTask<bool> WaitToReadAsync(CancellationToken cancellationToken)
+    {
+        return _channel.Reader.WaitToReadAsync(cancellationToken);
+    }
+
+    public bool TryRead(out NormalizedTick? tick)
+    {
+        if (_channel.Reader.TryRead(out tick))
+        {
+            Interlocked.Decrement(ref _count);
+            return true;
+        }
+
+        tick = null;
+        return false;
+    }
+
     public async IAsyncEnumerable<NormalizedTick> ReadAllAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {

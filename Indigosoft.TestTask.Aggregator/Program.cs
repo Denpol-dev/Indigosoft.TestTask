@@ -16,6 +16,8 @@ builder.Services.Configure<TickChannelOptions>(
     builder.Configuration.GetSection("Aggregator:Channel"));
 builder.Services.Configure<DeduplicationOptions>(
     builder.Configuration.GetSection("Aggregator:Deduplication"));
+builder.Services.Configure<BatchWriterOptions>(
+    builder.Configuration.GetSection("Aggregator:BatchWriter"));
 
 builder.Services.AddPostgresDatabase(builder.Configuration);
 builder.Services.AddSingleton<IExchangeMessageStream, WebSocketExchangeMessageStream>();
@@ -26,8 +28,11 @@ builder.Services.AddSingleton<ExchangeMessageParserResolver>();
 builder.Services.AddSingleton<ITickDeduplicator, InMemoryTickDeduplicator>();
 builder.Services.AddSingleton<TickChannel>();
 builder.Services.AddSingleton<IReconnectDelay, SystemReconnectDelay>();
+builder.Services.AddSingleton<IBatchWriterDelay, SystemBatchWriterDelay>();
+builder.Services.AddSingleton<TickWriteStatistics>();
 builder.Services.AddSingleton<IExchangeConnectionWorker, ExchangeConnectionWorker>();
 builder.Services.AddHostedService<DatabaseInitializationHostedService>();
+builder.Services.AddHostedService<TickBatchWriterHostedService>();
 builder.Services.AddHostedService<ExchangeConnectionHostedService>();
 
 var app = builder.Build();
