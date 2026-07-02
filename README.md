@@ -69,7 +69,7 @@ docker compose up --build
 
 Состав стенда:
 
-- `postgres`: PostgreSQL 16, снаружи доступен на `localhost:5433`;
+- `postgres`: PostgreSQL 16, снаружи доступен на `localhost:55433`;
 - `exchange-simulator`: доступен на `http://localhost:5100`;
 - `aggregator`: доступен на `http://localhost:5200`.
 
