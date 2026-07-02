@@ -192,7 +192,7 @@ public sealed class TickBatchWriterHostedService : BackgroundService
                 "Tick batch writer drain timed out after {DrainTimeoutSeconds} seconds.",
                 settings.DrainTimeout.TotalSeconds);
 
-            DropBatch(batch);
+            DropBatchAndUnreadTicks(batch);
         }
     }
 
@@ -271,19 +271,24 @@ public sealed class TickBatchWriterHostedService : BackgroundService
         }
     }
 
-    private void DropBatch(List<NormalizedTick> batch)
+    private void DropBatchAndUnreadTicks(List<NormalizedTick> batch)
     {
-        if (batch.Count == 0)
+        var unreadTicks = _tickChannel.Count;
+        var droppedTicks = batch.Count + unreadTicks;
+
+        if (droppedTicks == 0)
         {
             return;
         }
 
         _statistics.IncrementFailedBatches();
-        _statistics.AddDroppedTicks(batch.Count);
+        _statistics.AddDroppedTicks(droppedTicks);
 
         _logger.LogError(
-            "Dropping {TickCount} ticks because batch writer drain did not complete.",
-            batch.Count);
+            "Dropping {DroppedTickCount} ticks because batch writer drain did not complete. {BatchTickCount} ticks were already batched and {UnreadTickCount} ticks remained unread in the channel.",
+            droppedTicks,
+            batch.Count,
+            unreadTicks);
 
         batch.Clear();
     }

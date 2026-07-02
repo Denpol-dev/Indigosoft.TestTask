@@ -60,6 +60,29 @@ public sealed class TickBatchWriterHostedServiceTests
     }
 
     [Fact]
+    public async Task WritesPartialBatch_WhenFlushIntervalElapsed()
+    {
+        var tickChannel = CreateChannel();
+        var writer = new FakeTickBatchWriter();
+        var service = CreateService(tickChannel, writer, new BatchWriterOptions
+        {
+            BatchSize = 10,
+            FlushIntervalMs = 50
+        });
+
+        await service.StartAsync(CancellationToken.None);
+        await tickChannel.EnqueueAsync(CreateTick(1), CancellationToken.None);
+
+        await writer.WaitForBatchCountAsync(1).WaitAsync(TimeSpan.FromSeconds(2));
+
+        Assert.Single(writer.Batches);
+        Assert.Single(writer.Batches[0]);
+
+        tickChannel.Complete();
+        await service.StopAsync(CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(2));
+    }
+
+    [Fact]
     public async Task Retries_WhenWriterThrowsThenSucceeds()
     {
         var tickChannel = CreateChannel();
